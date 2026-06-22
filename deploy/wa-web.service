@@ -1,0 +1,15 @@
+[Unit]
+Description=WhatsApp Scheduler - web app
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/wa_automation
+ExecStart=/home/pi/wa_automation/.venv/bin/uvicorn app:app --host 0.0.0.0 --port 8000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

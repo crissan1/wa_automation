@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WhatsApp Scheduler</title>
+  <style>
+    :root { --bg:#0b141a; --panel:#111b21; --accent:#00a884; --text:#e9edef; --muted:#8696a0; --line:#2a3942; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+           background:var(--bg); color:var(--text); }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 1.25rem; }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:16px; }
+    label { display:block; font-size:.85rem; color:var(--muted); margin:10px 0 4px; }
+    input, select, textarea, button { width:100%; padding:10px; border-radius:8px;
+           border:1px solid var(--line); background:#0b141a; color:var(--text); font-size:1rem; }
+    textarea { min-height: 90px; resize: vertical; }
+    .row { display:flex; gap:12px; }
+    .row > div { flex:1; }
+    button.primary { background:var(--accent); border:none; color:#03110d; font-weight:600; cursor:pointer; margin-top:14px; }
+    .seg { display:flex; gap:8px; margin-bottom:4px; }
+    .seg label { flex:1; text-align:center; padding:8px; border:1px solid var(--line); border-radius:8px; cursor:pointer; margin:0; color:var(--text); }
+    .seg input { display:none; }
+    .seg input:checked + span { color:var(--accent); font-weight:600; }
+    table { width:100%; border-collapse: collapse; font-size:.9rem; }
+    th, td { text-align:left; padding:8px; border-bottom:1px solid var(--line); vertical-align:top; }
+    .status { font-size:.75rem; padding:2px 8px; border-radius:99px; }
+    .pending { background:#2a3942; color:#e9edef; }
+    .sent { background:#0b3d2e; color:#7ee0b8; }
+    .failed { background:#4d1f1f; color:#ffb4b4; }
+    .canceled { background:#333; color:#999; }
+    .muted { color:var(--muted); font-size:.8rem; }
+    .att { color:var(--accent); font-size:.78rem; }
+    .cancelbtn { width:auto; padding:4px 10px; font-size:.8rem; background:transparent; color:#ffb4b4; border:1px solid #4d1f1f; cursor:pointer; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📅 WhatsApp Scheduler</h1>
+
+  <div class="card">
+    <form action="/schedule" method="post" enctype="multipart/form-data">
+      <div class="seg">
+        <label><input type="radio" name="target_kind" value="number" checked onclick="toggle()"><span>Phone number</span></label>
+        <label><input type="radio" name="target_kind" value="group" onclick="toggle()"><span>Group</span></label>
+      </div>
+
+      <div id="number-field">
+        <label>Recipient number (with country code, digits only)</label>
+        <input type="text" name="number" placeholder="5511999999999" inputmode="numeric">
+      </div>
+
+      <div id="group-field" style="display:none">
+        <label>Group</label>
+        <select name="group_jid">
+          {% for g in groups %}<option value="{{ g.jid }}">{{ g.name }}</option>{% endfor %}
+          {% if not groups %}<option value="">(no groups cached yet — start the worker)</option>{% endif %}
+        </select>
+      </div>
+
+      <label>Message</label>
+      <textarea name="body" placeholder="Type your message…"></textarea>
+
+      <div class="row">
+        <div>
+          <label>Send at (Pi local time)</label>
+          <input type="datetime-local" name="scheduled_at" value="{{ now_local }}" required>
+        </div>
+        <div>
+          <label>Attachments (optional)</label>
+          <input type="file" name="files" multiple>
+        </div>
+      </div>
+
+      <button class="primary" type="submit">Schedule</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h1 style="font-size:1rem">Queue</h1>
+    <table>
+      <thead><tr><th>When</th><th>To</th><th>Message</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for m in messages %}
+        <tr>
+          <td class="muted">{{ m.scheduled_at | datetime }}</td>
+          <td>{{ m.display_name }}<div class="muted">{{ m.target_type }}</div></td>
+          <td>
+            {{ m.body or "" }}
+            {% for a in m.attachments %}<div class="att">📎 {{ a.filename }}</div>{% endfor %}
+            {% if m.error %}<div class="failed status">err: {{ m.error }}</div>{% endif %}
+          </td>
+          <td><span class="status {{ m.status }}">{{ m.status }}</span></td>
+          <td>{% if m.status == 'pending' %}
+            <form action="/cancel/{{ m.id }}" method="post"><button class="cancelbtn" type="submit">cancel</button></form>
+          {% endif %}</td>
+        </tr>
+      {% endfor %}
+      {% if not messages %}<tr><td colspan="5" class="muted">Nothing scheduled yet.</td></tr>{% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  function toggle() {
+    const isGroup = document.querySelector('input[name=target_kind]:checked').value === 'group';
+    document.getElementById('group-field').style.display = isGroup ? 'block' : 'none';
+    document.getElementById('number-field').style.display = isGroup ? 'none' : 'block';
+  }
+</script>
+</body>
+</html>

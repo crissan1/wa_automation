@@ -1,0 +1,15 @@
+[Unit]
+Description=WhatsApp Scheduler - sender worker (neonize)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/wa_automation
+ExecStart=/home/pi/wa_automation/.venv/bin/python worker.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
