@@ -25,7 +25,7 @@ client = NewClient(str(db.BASE_DIR / "wa_session.db"))
 @client.event(ConnectedEv)
 def on_connected(_, __):
     try:
-        results = client.is_on_whatsapp([number])
+        results = client.is_on_whatsapp(number)
         if not results:
             print(f"No result for {number} (server returned nothing).")
         for r in results:

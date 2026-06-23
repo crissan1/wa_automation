@@ -56,7 +56,7 @@ def resolve_number(target_jid: str):
     and lets us fail clearly if the number isn't actually on WhatsApp.
     """
     number = target_jid.split("@", 1)[0]
-    results = client.is_on_whatsapp([number])
+    results = client.is_on_whatsapp(number)
     for r in results:
         if getattr(r, "IsIn", False):
             jid = r.JID
