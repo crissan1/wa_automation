@@ -49,9 +49,27 @@ def refresh_groups():
         print("[worker] group refresh failed:\n" + traceback.format_exc())
 
 
+def resolve_number(target_jid: str):
+    """Resolve a phone-number JID via the server before sending.
+
+    This populates whatsmeow's LID mapping (avoids the "no LID found" error)
+    and lets us fail clearly if the number isn't actually on WhatsApp.
+    """
+    number = target_jid.split("@", 1)[0]
+    results = client.is_on_whatsapp([number])
+    for r in results:
+        if getattr(r, "IsIn", False):
+            jid = r.JID
+            return build_jid(jid.User, jid.Server)
+    raise ValueError(f"{number} is not a WhatsApp user (check the number/format)")
+
+
 def send_one(msg: dict):
     """Send a single queued message (text and/or attachments) to its target."""
-    to = jid_from_string(msg["target_jid"])
+    if msg["target_type"] == "number":
+        to = resolve_number(msg["target_jid"])
+    else:
+        to = jid_from_string(msg["target_jid"])
     body = msg.get("body") or ""
     attachments = msg.get("attachments", [])
 
