@@ -40,9 +40,9 @@ def number_to_jid(raw: str) -> str:
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     return templates.TemplateResponse(
+        request,
         "index.html",
         {
-            "request": request,
             "messages": db.list_messages(),
             "groups": db.list_groups(),
             "now_local": datetime.now().strftime("%Y-%m-%dT%H:%M"),
