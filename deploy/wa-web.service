@@ -5,9 +5,9 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/wa_automation
-ExecStart=/home/pi/wa_automation/.venv/bin/uvicorn app:app --host 0.0.0.0 --port 8000
+User=raspi
+WorkingDirectory=/home/raspi/wa_automation/wa_automation
+ExecStart=/home/raspi/wa_automation/venv/bin/uvicorn app:app --host 0.0.0.0 --port 8000
 Restart=on-failure
 RestartSec=5
 
